@@ -17,6 +17,10 @@ US_BIN="$ROOT/US/Rayman (USA) (DW0856).bin"
 python -I "$T/make_patch.py" "$T/data" "$FR_T1" "$TMP/t01.bin" "$MODE" | tail -1
 python -I "$T/region_ntsc.py" "$US_BIN" "$TMP/t01.bin"
 case "$MODE" in *center*) python -I "$T/title_bg.py" "$TMP/t01.bin" 5 ;; esac
+# vidéo d'intro PS1 320x200 stéréo (video/AFR_final.cpk) : place des vidéos anglaises (inutilisées, jeu forcé en français)
+if [ -f "$ROOT/video/AFR_final.cpk" ]; then
+  MSYS_NO_PATHCONV=1 python -I "$(cygpath -m "$T/replace_file.py")" "$(cygpath -m "$TMP/t01.bin")" /VIDEOFR/AFR.CPK "$(cygpath -m "$ROOT/video/AFR_final.cpk")"     /VIDEOUK/AFINUK.CPK=/VIDEOFR/AFINFR.CPK /VIDEOUK/AUK.CPK=/VIDEOFR/AFR.CPK
+fi
 
 # cue temporaire : piste 1 patchée + pistes audio originales FR
 python -I - "$FR_CUE" "$TMP/t01.bin" "$TMP/tmp.cue" <<'EOF'
