@@ -1,0 +1,12 @@
+# données du jeu et fichiers générés : jamais dans le dépôt
+*.bin
+*.cue
+*.iso
+*.img
+*.bps
+tools/data/fr/
+tools/data/us/
+tools/data/patch_log.txt
+tools/pylib/
+tools/mednafen/
+__pycache__/
