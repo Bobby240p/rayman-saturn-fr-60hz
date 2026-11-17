@@ -19,6 +19,10 @@ Aucune donnée du jeu n'est fournie dans ce dépôt : il faut sa propre image di
 - **Français forcé** (le jeu prenait la langue du BIOS), **« APPUYEZ SUR START »** au lieu de « PRESS START BUTTON ».
 - Écran titre : « © Ubi Soft 1995 » descendu de 5 lignes pour ne plus toucher le haut de l'écran.
 
+- **Logo Ubi Soft raccourci (v1.2)** : le jeu garde le logo à l'écran jusqu'à la fin de la piste audio 16 ;
+  sa longue traîne presque inaudible est coupée (piste ramenée à 9,6 s avec fondu). On arrive sur l'écran
+  titre environ 2,5 s plus tôt que sur la version PAL d'origine.
+
 ### Cinématique d'introduction (v1.1)
 La vidéo d'intro (avant la carte, en début de partie) est remplacée par celle de la version PS1 :
 
@@ -37,37 +41,47 @@ jeu est forcé en français ; leurs entrées pointent vers les vidéos français
 Qualité par rapport à la PS1 : même résolution et même cadence ; Cinepak (512 blocs de couleurs par image)
 adoucit les détails fins et marque un peu les dégradés (PSNR ≈ 30 dB sur les images non noires).
 
-## Appliquer le patch
+## Appliquer le patch (v1.2)
 
-Fichier source attendu : **`Rayman (Europe) (En,Fr,De) (1S) (Track 01).bin`** (dump Redump)
+La release v1.2 contient **deux patchs BPS**, à appliquer sur les pistes du dump Redump
+`Rayman (Europe) (En,Fr,De) (1S)` :
 
-| | |
-|---|---|
-| Taille | 152 482 512 octets |
-| CRC32 | `07997b9c` |
-| MD5 | `88bb0bfd24405d149c621fc8def64775` |
+| Patch | Fichier source | CRC32 source | MD5 résultat |
+|---|---|---|---|
+| `...-v1.2-track01.bps` | `(Track 01).bin` (152 482 512 octets) | `07997b9c` | `d488803bb5a9d553a2d262d5e5880f0d` |
+| `...-v1.2-track16.bps` | `(Track 16).bin` (1 999 200 octets) | `18abdccd` | `9edaccf377685aef55030aac2c941fd7` |
 
-1. Télécharger le patch `.bps` depuis la page *Releases* (`v1.1` : avec la nouvelle intro ; `v1.0` : sans).
-2. L'appliquer sur la piste 1 avec [Floating IPS](https://github.com/Alcaro/Flips), [ROM Patcher JS](https://www.marcrobledo.com/RomPatcher.js/)
-   ou `python tools/mkbps.py apply <piste01.bin> <patch.bps> <sortie.bin>`.
-3. Remplacer la piste 1 par le fichier patché (même nom), garder les pistes audio et le `.cue` d'origine.
+1. Appliquer chaque patch sur sa piste avec [Floating IPS](https://github.com/Alcaro/Flips),
+   [ROM Patcher JS](https://www.marcrobledo.com/RomPatcher.js/) ou `python tools/mkbps.py apply <piste.bin> <patch.bps> <sortie.bin>`.
+2. Remplacer les pistes 01 et 16 par les fichiers patchés (mêmes noms), garder les autres pistes et le `.cue` d'origine.
 
-MD5 de la piste 1 patchée : v1.1 `d488803bb5a9d553a2d262d5e5880f0d` — v1.0 `e71afff022bb092ba844aaaa0b000cee`.
+**Console avec Fenrir** : garder ce format Redump (un fichier par piste, `.cue` d'origine). Une image fusionnée en
+un seul `.bin` reste bloquée sur l'écran de chargement de Fenrir.
 
-**SSF** : SSF lit mal les images en plusieurs fichiers. Fusionner les pistes en un seul `.bin` :
+**Émulateur SSF** : à l'inverse, SSF lit mal les images en plusieurs fichiers. Les fusionner en un seul `.bin` :
 `python tools/merge.py "<image>.cue" <dossier_sortie> "Rayman FR 60Hz"`.
+
+## Vérification « plus rien en 50 Hz »
+
+- **Gameplay** : la démo Band Land rejouée dans la version US et dans la version patchée reste synchronisée du début à la fin
+  (mêmes positions, même compteur de tings aux mêmes instants) ; vitesse de marche et compteurs internes identiques à l'US.
+- **Code** : toutes les vitesses et minuteries ont les valeurs US ; les constantes restées en version PAL sont de la mise en page
+  (hauteur d'écran, lignes de texte, positions), compensée par le centrage et le cadrage.
+- **Son** : les musiques sont des pistes CD lues à vitesse fixe, de même durée que sur le disque US ; les banques de bruitages
+  sont identiques à l'US à 2 octets près (un volume et un réglage de mixage, sans lien avec la vitesse).
 
 ## Limites connues
 
 - « DEMO PLAY » reste en anglais (texte codé en dur dans le jeu).
 - Images de chargement : centrées sous Mednafen ; un écart d'affichage a été signalé sous SSF, non résolu.
-- Testé sous Mednafen (et SSF pour la partie 60 Hz), pas sur une vraie console. La vidéo v1.1 a été validée sous Mednafen.
+- Testé sous Mednafen et SSF, et sur Saturn réelle (Fenrir, format Redump multi-fichiers).
 
 ## Reconstruire depuis les sources
 
 `tools/build.sh` reconstruit l'image patchée à partir de l'image d'origine. Il faut en plus :
 - l'exécutable principal du jeu (fichier `0` du disque) dans `tools/data/fr/0` (extraction : `python tools/iso.py <piste01.bin> <dossier>`) ;
 - la piste de données de la version US (pour les secteurs de région) ;
+- pour la piste 16 : `python tools/trim_track.py "<(Track 16).bin>" audio/Track16_court.bin 9.6 0.4` (utilisée par `build.sh`) ;
 - pour la vidéo : `sh tools/make_video.sh "<piste 01 du disque PS1 Rayman (Europe)>"` (ffmpeg requis), qui produit
   `video/AFR_final.cpk`, inséré automatiquement par `build.sh` ;
 - Python 3 avec `numpy` et `pillow`.
@@ -78,4 +92,5 @@ Principaux fichiers :
 - `region_ntsc.py`, `title_bg.py` : région du disque, image de l'écran titre ;
 - `mkfilm.py`, `cvidfix.py` : conteneur Sega FILM et compatibilité Cinepak avec le lecteur Saturn ;
 - `replace_file.py` : remplacement d'un fichier dans l'image disque (EDC/ECC, répertoire ISO) ;
-- `mkbps.py` : création/application du patch BPS.
+- `trim_track.py` : raccourcissement de la piste audio du logo ;
+- `mkbps.py` : création/application des patchs BPS.

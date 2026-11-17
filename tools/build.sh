@@ -31,6 +31,8 @@ for l in open(cue):
     m = re.match(r'FILE "(.+)" BINARY', l.strip())
     if m:
         p = t1 if '(Track 01)' in m.group(1) else os.path.join(d, m.group(1))
+        court = os.path.join(os.path.dirname(d), 'audio', 'Track16_court.bin')   # musique du logo sans sa traîne
+        if '(Track 16)' in m.group(1) and os.path.exists(court): p = court
         l = 'FILE "%s" BINARY\n' % p
     lines.append(l)
 open(out, 'w').writelines(lines)

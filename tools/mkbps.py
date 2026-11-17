@@ -22,9 +22,10 @@ def vdec(b, p):
 def create(src, dst, out):
     import numpy as np
     s = open(src, 'rb').read(); t = open(dst, 'rb').read()
-    assert len(s) == len(t), 'tailles différentes : non géré'
-    a = np.frombuffer(s, np.uint8); b = np.frombuffer(t, np.uint8)
+    n = min(len(s), len(t))                         # au-delà de la source : données lues dans le patch
+    a = np.frombuffer(s, np.uint8)[:n]; b = np.frombuffer(t, np.uint8)[:n]
     diff = np.flatnonzero(a != b)
+    if len(t) > n: diff = np.concatenate([diff, np.arange(n, len(t))])
     # regroupe les octets modifiés en plages (fusion si écart < 8)
     ranges = []
     for i in diff.tolist():
